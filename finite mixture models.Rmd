@@ -1,0 +1,535 @@
+---
+title: "Introducción a los modelos de mezcla finitos"
+author: 
+- "Juan Sosa PhD" 
+- "jcsosam@unal.edu.co"
+date: ""
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\newcommand{\simiid}{\,{\stackrel{\text{iid}}{\sim}}\,}
+\newcommand{\simind}{\,{\stackrel{\text{ind}}{\sim}}\,}
+
+\newcommand{\yv}{\boldsymbol{y}}
+\newcommand{\zv}{\boldsymbol{z}}
+
+\newcommand{\te}{\theta}
+
+\newcommand{\alv}{\boldsymbol{\alpha}}
+\newcommand{\lamv}{\boldsymbol{\lambda}}
+\newcommand{\tev}{\boldsymbol{\theta}}
+\newcommand{\omev}{\boldsymbol{\omega}}
+\newcommand{\phiv}{\boldsymbol{\phi}}
+\newcommand{\sigv}{\boldsymbol{\sigma}}
+\newcommand{\xiv}{\boldsymbol{\xi}}
+
+\newcommand{\Nor}{\small{\textsf{N}}}
+\newcommand{\Cat}{\small{\textsf{Categorica}}}
+\newcommand{\Dir}{\small{\textsf{Dirichlet}}}
+\newcommand{\GI} {\small{\textsf{GI}}}
+
+# Introducción
+
+Las **distribuciones de mezcla** surgen en la práctica cuando una variable aleatoria de interés se observa bajo diferentes condiciones.
+
+La población consiste de cierto número de subpoblaciones (grupos) cada una de las cuales se rige por un modelo relativamente simple.
+
+## Mezclas finitas
+
+Se quiere modelar la distribución de cada componente del vector de observaciones $\yv = (y_1,\ldots,y_n)$ por medio de una mezcla de $H$ componentes. El número de componentes $H$ se considera conocido y se debe fijar de antemano.
+
+No se conoce la componente de la mezcla a la cual pertenece cada observación de $\yv$.
+
+La componente $h$ de la mezcla se denota con $f_h(\cdot\mid\tev_h,\phiv)$ y depende de un vector de parámetros desconocidos $\tev_h$ específicos de la componente $h$, para $h = 1,\ldots,H$, y $\phiv$ comunes a todas las componentes de la mezcla.
+
+La proporción de la población que se rige por la componente $h$ de la mezcla se denota con $\omega_h$, para $h = 1,\ldots,H$, de donde $0 \leq \omega_h \leq 1$ y $\sum_{h=1}^H \omega_h = 1$.
+
+Comúnmente se asume que todas las componentes de la mezcla pertenecen a la misma familia de distribuciones paramétrica, i.e., $f_h\equiv f$ para cada $h = 1,\ldots,H$, de forma que la distribución muestral de las componentes de $\yv = (y_1,\ldots,y_n)$ está dada por
+$$
+p(y_i\mid\omev,\tev,\phiv) = \sum_{h=1}^H \omega_h \, f(y_i\mid\tev_h,\phiv)\,,
+$$
+donde $\omev = (\omega_1,\ldots,\omega_H)$ y $\tev = (\tev_1,\ldots,\tev_H)$.
+
+
+Este modelo de mezcla se puede expresar jerárquicamente considerando las **variables indicadoras** $z_{i,h}\in\{0;1\}$ (que son latentes o no observadas) definidas como 
+$$
+z_{i,h} =
+\begin{cases}
+    1, & \text{si la observación $i$ pertenece a la componente de la mezcla $h$;}\\
+    0, & \text{en otro caso,}
+\end{cases}
+$$
+para $i=1,\ldots,n$ y $h = 1,\ldots,H$, con exactamente una de las componentes de $\zv_i = (z_{i,1},\ldots,z_{i,H})$ igual a 1 para cada $i$, de donde $\zv_i\mid\omev\stackrel{\text{iid}}{\sim}\textsf{Multinomial}(1,\omev)$.
+
+Así, la distribución conjunta de las observaciones $\yv$ y de las indicadoras $\zv$ condicional en los parámetros del modelo se puede escribir como 
+$$
+\begin{align*}
+p(\yv,\zv\mid\omev,\tev) 
+&= p(\yv\mid\zv,\omev,\tev) \, p(\zv\mid\omev,\tev) \\
+&= p(\yv\mid\zv,\tev) \, p(\zv\mid\omev) \\
+&= \prod_{i=1}^n\prod_{h=1}^H p(y_i\mid\tev_h)^{z_{i,h}} \,\prod_{i=1}^n\prod_{h=1}^H \omega_h^{z_{i,h}} \\
+&= \prod_{i=1}^n\prod_{h=1}^H \left[\omega_h \, p(y_i\mid\tev_h)\right]^{z_{i,h}} \,.
+\end{align*}
+$$
+
+Típicamente se asume que $p(\tev,\omev) = p(\tev)\,p(\omev)$.
+
+Como $\zv_i\mid\omev\stackrel{\text{iid}}{\sim}\textsf{Multinomial}(1,\omev)$, entonces conviene hacer $\omev\sim\textsf{Dir}(\alpha_1,\ldots,\alpha_H)$. En este caso, $\sum_{h=1}^H \alpha_h$ es una medida del contenido de información de esta distribución previa (tamaño de muestra previo).
+
+Tanto $p(\tev)$ como $p(\omev)$ tienen que ser distribuciones propias para asegurar que la distribución posterior correspondiente sea propia.
+
+## Formulación general
+
+Las distribuciones de mezcla se pueden formular jerárquicamente en términos de **asignaciones de grupo** (indicadoras de grupo que nuevamente son no observadas) $\xi_i\in\{1;\ldots;H\}$ (que son nuevamente latentes) tales que
+$$
+\textsf{Pr}(\xi_i = h\mid\omega_h) = \omega_h
+$$
+para $i=1,\ldots,n$ y $h = 1,\ldots,H$, que corresponden a variables categóricas que asumen valores en $\{1;\ldots;H\}$
+con probabilidades $\omega_1,\ldots,\omega_H$, i.e., $\xi_i \mid \omev \sim \textsf{Categorica}(\omev)$.
+Así, la distribución muestral se puede escribir como
+$$
+y_i\mid\xi_i,\tev_{\xi_i},\phiv \simind f(\tev_{\xi_i},\phiv)\,,\qquad i = 1,\ldots,n\,.
+$$
+
+## Cambio de etiquetas
+
+Los parámetros de un modelo se llaman no identificables si el mismo valor de la verosimilitud se obtiene para más de una configuración de los parámetros. 
+
+Todos los modelos de mezcla finitos son no identificables porque el valor de la verosimilitud no cambia cuando se permutan las etiquetas de los grupos.
+Esto es, no hay nada en la verosimilitud que permita distinguir las etiquetas de las componentes de mezcla.
+
+# Mezcla de Normales univariada con parámetros de ubicación y escala específicos
+
+Se considera el modelo con componentes Normales con componentes específicas $\tev=(\theta_1,\ldots,\theta_H)$ y $\sigv^2=(\sigma^2_1,\ldots,\sigma^2_H)$ de la forma
+$$
+\begin{align*}
+	y_i\mid\omev,\tev,\sigv^2 \simiid \sum_{h=1}^H\omega_h\,\textsf{N}(\theta_h,\sigma_h^2)\,,\qquad i = 1,\ldots,n\,,
+\end{align*}
+$$
+que usando las indicadoras de grupo $\xiv=(\xi_1,\ldots,\xi_n)$ se puede escribir como
+$$
+y_i\mid\xi_i,\theta_{\xi_i},\sigma_{\xi_i}^2 \simind \textsf{N}(\theta_{\xi_i},\sigma^2_{\xi_i})\,,\qquad i = 1,\ldots,n\,.
+$$
+
+La distribución previa está dada por
+$$
+\xi_i \mid \omev \sim    \Cat(\omev)\,, \qquad
+\omev           \sim    \Dir(\alv_0)\,, \qquad
+\theta_h        \simiid \Nor(\mu_0,\gamma_0^2)\,, \qquad
+\sigma_h^2      \simiid \GI\left(\tfrac{\nu_0}{2},\tfrac{\nu_0\sigma^2_0}{2}\right)\,,
+$$
+para $i = 1,\ldots,n$ y $h = 1,\ldots,H$.
+
+Los parámetros del modelo son $\Theta = (\xi_1,\ldots,\xi_n,\omega_1,\ldots,\omega_H,\te_1,\ldots,\te_H,\sigma_1^2,\ldots,\sigma^2_H)$, mientras que los hiperparámetros del modelo son $\alv_0,\mu_0,\gamma_0^2,\nu_0,\sigma^2_0$.
+
+
+## Elicitación de los hiperparámetros
+
+Se hace $\alv_0 = \frac{1}{H}\,\boldsymbol{1}_H$ con el fin de favorecer la asignación de las observaciones en unas cuantas componentes dominantes. 
+
+Además, se hace $\mu_0 = 0$, $\gamma^2_0 = 1$, $\nu_0 = 1$, $\sigma^2_0 = 1$ luego de estandarizar los datos con el fin de generar medias y varianzas específicas de los grupos en ubicaciones razonables. Después de obtener las muestras de $\te_1,\ldots,\te_H$ y $\sigma_1^2,\ldots,\sigma^2_H$ de la distribución posterior a partir de los datos estandarizados, se puede aplicar una transformación lineal a cada muestra para obtener muestras asociadas con los datos no estandarizados. 
+
+
+## Estimación por medio del algoritmo Esperanza-Maximización
+
+A continuación se establece un **algoritmo Esperanza-Maximización (EM)** para obtener las modas de la distribución posterior $p(\Theta\mid\boldsymbol{y})$ dada por:
+$$
+\begin{align*}
+p(\Theta\mid\yv) &\propto \prod_{i=1}^n\Nor(y_i\mid\theta_{\xi_i},\sigma_{\xi_i}^2) \\
+&\quad\times\prod_{i=1}^n\Cat(\xi_i\mid\omev) \times\Dir(\omev)\\
+&\quad\quad\times\prod_{h=1}^H\Nor(\theta_h\mid\mu_0,\gamma^2_0)\times\prod_{h=1}^H\GI\left(\sigma_h^2\mid\tfrac{\nu_0}{2},\tfrac{\nu_0\sigma^2_0}{2}\right)\,.
+\end{align*}
+$$
+
+El algoritmo encuentra las modas de la distribución posterior marginal $p(\phiv\mid\yv)$, con $\phiv = (\tev,\sigv^2,\omev)$, promediando sobre la asignaciones de grupo $\xiv$. En cada iteración, el algoritmo incrementa el valor de $\log p(\phiv\mid\yv)$ hasta convergencia.
+
+El logaritmo de la distribución posterior es
+$$
+\begin{align*}
+\log p(\phiv,\xiv\mid\yv) &= \sum_{i=1}^n\sum_{h=1}^H [\xi_i = h]\,\log\textsf{N}(y_i\mid\theta_h,\sigma_h^2) \\
+&\quad +\sum_{i=1}^n\sum_{h=1}^H [\xi_i = h]\,\log\omega_h + \sum_{h=1}^H(\alpha_{0,h}-1)\log\omega_h \\
+&\quad\quad + \sum_{h=1}^H \log\textsf{N}(\theta_h\mid\mu_0,\gamma^2_0) + \sum_{h=1}^H \log\textsf{GI}\left(\sigma_h^2\mid\tfrac{\nu_0}{2},\tfrac{\nu_0\sigma^2_0}{2}\right) + \text{C}\,,
+\end{align*}
+$$
+donde $[\xi_i = h] = 1$ si $\xi_i = h$ y $[\xi_i = h] = 0$ en otro caso, y $\text{C}$ es una constante.
+
+1. Elegir una estimación inicial $\phiv^{(0)}$.
+2. Para $t = 1,2,\ldots$:
+
+    Paso E: Determinar $Q(\phiv\mid\phiv^\text{c}) = \textsf{E}_\text{c}\log p(\phiv,\xiv\mid\yv)$, donde $\textsf{E}_\text{c}(\cdot)$ es el valor esperado respecto a $p(\xiv\mid\phiv^\text{c},\yv)$, con $\phiv^\text{c}$ el valor actual de $\phiv$:
+    $$
+    \begin{align*}
+    Q(\phiv\mid\phiv^\text{c}) &= \sum_{i=1}^n\sum_{h=1}^H \pi_{i,h}^\text{c}\,(\log(\omega_h) + \log\textsf{N}(y_i\mid\theta_h,\sigma_h^2)) \\ 
+    &\quad + \sum_{h=1}^H(\alpha_{0,h}-1)\log\omega_h + \sum_{h=1}^H \log\textsf{N}(\theta_h\mid\mu_0,\gamma^2_0) + \sum_{h=1}^H \log\textsf{GI}\left(\sigma_h^2\mid\tfrac{\nu_0}{2},\tfrac{\nu_0\sigma^2_0}{2}\right) + \text{C}\,,
+    \end{align*}
+    $$
+    con
+    $$
+    \pi_{i,h}^\text{c} = \frac{\omega_h^\text{c}\,\textsf{N}(y_i\mid\theta_h^\text{c}, \sigma_h^{2\,\text{c}})}{\sum_{h=1}^H \omega_h^\text{c}\,\textsf{N}(y_i\mid\theta_h^\text{c}, \sigma_h^{2\,\text{c}})}\,,
+    $$
+    para $i = 1,\ldots,n$ y $h=1,\ldots,H$.
+    
+    Paso M: Actualizar $\phiv$ para incrementar $Q(\phiv\mid\phiv^\text{c})$:
+    
+    2.1 Actualizar $\theta_h^{(t)}$, para $h=1,\ldots,H$, con:
+    $$
+    \theta_h^{\text{new}} = \frac{\frac{1}{\gamma^2_0}\mu_0 + \frac{1}{\sigma^2_h}\sum_{i=1}^n\pi_{i,h}^\text{c}\,y_i}{\frac{1}{\gamma^2_0} + \frac{1}{\sigma^2_h}\sum_{i=1}^n\pi_{i,h}^\text{c}}\,.
+    $$
+    
+    2.2 Actualizar $\sigma_h^{2\,(t)}$, para $h=1,\ldots,H$, con:
+    $$
+    \sigma_h^{2\,\text{new}} = \frac{\nu_0\sigma^2_0 + \sum_{i=1}^n\pi_{i,h}^\text{c}\,(y_i - \theta_h)^2}{\nu_0 + \sum_{i=1}^n\pi_{i,h}^\text{c} + 2}\,.
+    $$
+    
+    2.3 Actualizar $\omega_h^{(t)}$, para $h=1,\ldots,H$, con:
+    $$
+    \omega_h^{\text{new}} = \frac{\alpha_{0,h} + \sum_{i=1}^n\pi_{i,h}^\text{c} - 1}{\sum_{h=1}^H (\alpha_{0,h} + \sum_{i=1}^n\pi_{i,h}^\text{c}) - H}\,.
+    $$
+
+3. Iterar hasta convergencia.
+
+## Ejemplo: Datos sintéticos
+
+
+Se genera una muestra aleatoria de tamaño $n = 100$ de una mezcla con $H=2$ componentes dada por
+$$
+y_i \simiid \tfrac{2}{3}\cdot\Nor(0,1) + \tfrac{1}{3}\cdot\Nor(4,0.75)\,, \qquad i =1,\ldots,n\,.
+$$
+La siguiente Figura presenta un histograma de los datos junto con la función de densidad de la población.
+
+
+```{r, echo=F}
+# parámetros de la simulación
+n <- 100
+H <- 2
+theta <- c(0, 4)
+sig2  <- c(1, 0.75) 
+omega <- c(2/3, 1/3)
+# simulación de datos
+set.seed(123)
+xi <- sample(x = 1:H, size = n, replace = TRUE, prob = omega)
+y  <- rnorm(n = n, mean = theta[xi], sd = sqrt(sig2[xi]))
+```
+
+
+```{r, echo=F, fig.align='center'}
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+# histograma
+hist(x = y, freq = F, nclass = 25, xlim = c(-4, 8), ylim = c(0, 0.35), cex.axis = 0.8, 
+     col = "gray90", border = "gray90", main = "", xlab = "y", ylab = "Densidad")
+# población
+f_true <- function(x) sum(omega*dnorm(x, mean = theta, sd = sqrt(sig2)))
+x0 <- seq(from = -4, to = 8, len = 1000)
+y0 <- NULL
+for (i in 1:length(x0)) y0[i] <- f_true(x0[i])
+lines(x = x0, y = y0, type = "l", col = "black", lwd = 2)
+```
+
+### Ajuste del modelo {-}
+
+Usando una tolerancia de 0.0001 (el algoritmo se detiene una vez el incremento de $\log p(\phiv\mid\yv)$ sea menor que la tolerancia), se obtiene que los máximos locales se encuentran en 
+$$
+\tev = (-0.0764,3.8935)\,,\qquad\sigv^2 = (0.9216,0.8480)\,,\qquad\omev=(0.6635,0.3365)\,,
+$$
+lo que está en concordancia con los valores que generaron los datos.
+
+Además, a partir de los valores de $\pi_{i,h}$ se puede estimar puntualmente las asignaciones a los grupos mediante
+$$
+\hat{\xi}_i = \underset{h}{\arg\max}\,\{\pi_{i,h}:h=1,\ldots,H\}\,,\qquad i=1,\ldots,n\,.
+$$
+Aunque se presenta un cambio de etiquetas, la partición estimada coincide casi que perfectamente con la partición verdadera. Solamente tres observaciones se encuentran clasificadas erróneamente.
+
+
+```{r, echo=FALSE}
+# cargar muestras de la distribución posterior
+# ver "finite mixture models - ejemplo 1.R"
+load(file = "finite mixture models modas ejemplo 1.RData")
+```
+
+
+```{r, echo = F, eval=F}
+# modas
+round(modas$theta,4)
+round(modas$sig2, 4)
+round(modas$omega,4)
+```
+
+
+```{r, echo = F, eval=F}
+# partición original
+# cuidado con el cambio de etiquetas
+xi <- xi - 1
+xi[xi == 1] <- 1
+xi[xi == 0] <- 2
+# partición estimada
+xi_hat <- modas$xi
+table(xi,xi_hat)
+```
+
+## Estimación por medio de MCMC
+
+A continuación se establece un **muestreador de Gibbs** para obtener muestras de la distribución posterior $p(\Theta\mid\boldsymbol{y})$.
+
+El muestreador de Gibbs requiere simular iterativamente cada parámetro $\theta\in\Theta$ de su distribución condicional completa $p(\theta\mid - )$, condicional en los datos y la actualización más resiente del resto de los parámetros. 
+
+Se denota con $\theta^{(b)}$ el estado del parámetro $\theta$ en la iteración $b$ del algoritmo, para $b=1,\ldots,B$. El algoritmo correspondiente al muestreador de Gibbs en este caso es como sigue:
+
+1. Elegir un estado inicial de los parámetros del modelo $\Theta^{(0)}$.
+2. Actualizar $\Theta^{(b-1)}$, para $b=1,\ldots,B$, hasta convergencia como sigue:
+
+    2.1. Simular $\theta_h^{(b)} \sim\Nor(m_h,v^2_h)$, para $h = 1,\ldots,H$, con:
+    $$
+    m_h = \frac{\frac{1}{\gamma_0^2}\mu_0 + \frac{n_h}{\sigma_h^2}\bar{y}_h}{\frac{1}{\gamma_0^2} + \frac{n_h}{\sigma_h^2}}
+    \qquad\text{y}\qquad 
+    v^2_h = \frac{1}{\frac{1}{\gamma_0^2} + \frac{n_h}{\sigma_h^2}}\,,
+    $$
+    donde $n_h = |\{i:\xi_i=h\}|$ y $\bar{y}_h = \frac{1}{n_h}\sum_{i:\xi_i=h} y_i$ son el número de observaciones y la media de las observaciones del grupo $h$.
+    
+    2.2. Simular $\sigma_h^{2\,(b)}\sim \GI(a_h,b_h)$, para $h = 1,\ldots,H$, con:
+    $$
+    a_h = \frac{\nu_0 + n_h}{2}
+    \qquad\text{y}\qquad
+    b_h = \frac{\nu_0\sigma_0^2 + \sum_{i:\xi_i=h} (y_i - \theta_{\xi_i})^2 }{2}\,.
+    $$
+    Se observa que $\sum_{i:\xi_i=h} (y_i - \theta_{\xi_i})^2 = \sum_{i:\xi_i=h} (y_i - \bar{y}_h)^2 + n_h(\bar{y}_h - \theta_h)^20.$
+    
+    2.3. Simular $\xi_i\sim\Cat(p_1,\ldots,p_H)$, para $i=1,\ldots,n$, con:
+    $$
+    p_h  = \frac{ \omega_h\, \Nor(y_i\mid\theta_h,\sigma_h^2) }{ \sum_{h=1}^H \omega_h\, \Nor(y_i\mid\theta_{h},\sigma_h^2) }\,,\qquad h = 1,\ldots,H\,.
+    $$
+    
+    2.4. Simular $\omev\sim\Dir(\alpha^0_1+n_1,\ldots,\alpha^0_{H}+n_H)$.
+
+3. Iterar hasta convergencia.
+
+
+## Ejemplo: Datos sintéticos (continuación)
+
+Se considera nuevamente el conjunto de datos sintéticos generado a partir de la mezcla con $H=2$ componentes dada por
+$$
+y_i \simiid \tfrac{2}{3}\cdot\Nor(0,1) + \tfrac{1}{3}\cdot\Nor(4,0.75)\,, \qquad i =1,\ldots,n\,.
+$$
+
+### Ajuste del modelo {-}
+
+Ahora, se ajusta el modelo de **mezcla de Normales univariada con parámetros de ubicación y escala específicos** por medio del muestreador de Gibbs descrito en la Sección 2.2 con 5000 iteraciones espaciadas cada 5 iteraciones después de un periodo de calentamiento de calentamiento de 2500 iteraciones, utilizando la configuración previa definida por $\mu_0 = 0$, $\gamma^2_0 = 1$, $\nu_0 = 1$, $\sigma^2_0 = 1$, $\alv_0 = \frac{1}{H}\,\boldsymbol{1}_H$, con $H=2$. La siguiente Figura muestra la cadena de la log-verosimilitud correspondiente. Se evidencia que no hay señales de falta de convergencia.
+
+
+```{r, echo=FALSE}
+# cargar muestras de la distribución posterior
+# ver "finite mixture models - ejemplo 1.R"
+load(file = "finite mixture models muestras ejemplo 1.RData")
+```
+
+
+```{r, echo=F, fig.align='center', fig.width=8, fig.height=4}
+# visualización cadena log-verosimilitud
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+plot(x = 1:length(muestras$LP), y = muestras$LP, type = "p", pch = ".", cex = 1.5, cex.axis = 0.8, main = "", xlab = "Iteración", ylab = "Log-verosimilitud")
+```
+
+
+### Inferencia sobre la función de densidad de la población {-}
+
+La distribución muestral $p(x\mid\omev,\tev,\sigv^{2}) = \sum_{h=1}^H \omega_h\,\textsf{N}(x\mid\theta_h,\sigma_h^{2})$ se puede evaluar en una secuencia de valores de $x$ a través de las muestras $\omev^{(b)},\tev^{(b)},\sigv^{2\,(b)}$, para $b=1,\ldots,B$, de la distribución posterior con el fin de cuantificar la incertidumbre (variabilidad) asociada con el aprendizaje acerca de la función de densidad de la población $g(\cdot)$ (ver el primer panel de la siguiente Figura). 
+Además, con este insumo, la estimación de la función de densidad de la población $g(\cdot)$ se hace mediante
+$$
+\hat{g}(x) = \frac{1}{B}\sum_{b=1}^B p(x\mid\omev^{(v)},\tev^{(b)},\sigv^{2\,(b)}) = \frac{1}{B}\sum_{b=1}^B\sum_{h=1}^H\omega_h^{(b)}\,\textsf{N}(x\mid\theta_h^{(b)},\sigma_h^{2\,(b)})\,,
+$$
+donde $\textsf{N}(\cdot\mid\theta,\sigma^2)$ representa la función de densidad de la distribución Normal con media $\theta$ y varianza $\sigma^2$ (ver el segundo panel de la siguiente Figura).
+
+
+```{r, echo=F}
+# inferencia sobre la función de densidad de la población
+M  <- 250
+x0 <- seq(from = -4, to = 8, len = M)
+y0 <- NULL
+B <- nrow(muestras$XI)
+B_grid <- seq(from = 5, to = B, len = B/5)
+B <- length(B_grid)
+FE <- matrix(data = NA, nrow = B, ncol = M)
+for (i in 1:M) {
+  y0[i] <- f_true(x0[i])
+  for (b in B_grid)
+    FE[which(b == B_grid),i] <- sum(muestras$OMEGA[b,]*dnorm(x = x0[i], mean = muestras$THETA[b,], sd = sqrt(muestras$SIG2[b,])))
+}
+f_hat <- colMeans(FE)
+f_inf <- apply(X = FE, MARGIN = 2, FUN = quantile, probs = 0.025)
+f_sup <- apply(X = FE, MARGIN = 2, FUN = quantile, probs = 0.975)
+```
+
+
+
+```{r, echo=F, fig.align='center', fig.width=8, fig.height=4}
+par(mfrow = c(1,2), mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+# visualización muestras
+plot(NA, NA, xlim = c(-4, 8), ylim = c(0, 0.35), cex.axis = 0.8, xlab = "y", ylab = "", main = "")
+# muestras
+for (b in 1:B)
+  lines(x = x0, y = FE[b,], type = "l", col = adjustcolor("red",0.02))
+# función de densidad verdadera
+lines(x = x0, y = y0, type = "l", col = "black", lwd = 2)
+# leyenda
+legend("topright", legend = c("Población", "Muestras"), fill = c("black","red"), border = c("black","red"), bty = "n", cex = 0.8)
+# visualización estimación puntual
+plot(NA, NA, xlim = c(-4, 8), ylim = c(0, 0.35), cex.axis = 0.8, xlab = "y", ylab = "Densidad", main = "")
+# estimación modelo
+lines(x = x0, y = f_hat, type = "l", col = "blue", lwd = 2)
+# función de densidad verdadera
+lines(x = x0, y = y0, type = "l", col = "black", lwd = 2)
+# leyenda
+legend("topright", legend = c("Población", "Estimación"), fill = c("black","blue"), border = c("black","blue"), bty = "n", cex = 0.8)
+```
+
+
+### Inferencia sobre los grupos {-}
+
+
+La **matriz de incidencia** $\mathbf A = [a_{i,j}]$ es una matriz cuadrada de tamaño $n\times n$ constituida por las probabilidades pareadas de que las observaciones $i$ y $j$ pertenezcan al mismo grupo, esto es, 
+$$
+a_{i,j} = \textsf{Pr}(\xi_i = \xi_j \mid \boldsymbol{y}) \approx \frac{1}{B}\sum_{b=1}^B \mathbb I\left\{ \xi_i^{(b)} = \xi_j^{(b)} \right\} \,,
+$$
+donde $\mathbb{I}(A)$ es la función indicadora del conjunto $A$.
+La matriz $\mathbf A$ es simétrica dado que $\textsf{Pr}(\xi_i = \xi_j \mid \boldsymbol{y}) = \textsf{Pr}(\xi_j = \xi_i \mid \boldsymbol{y})$, y además, $a_{i,i} = \textsf{Pr}(\xi_i = \xi_i \mid \boldsymbol{y}) = 1$, para todo $i$. Esta matriz se presenta en la siguiente Figura (colores más oscuros indican probabilidades más altas). El modelo es capaz de recobrar los grupos dado que se evidencian dos grandes grupos de individuos con altas probabilidades a posteriori de pertenecer al mismo grupo.
+
+
+```{r, echo=F, fig.align='center',fig.width=6, fig.height=6}
+# matriz de incidencia
+A <- matrix(data = 0, nrow = n, ncol = n)
+for (b in B_grid) {
+  for (i in 1:(n-1)) {
+    for (j in (i+1):n) {
+      if (muestras$XI[b,i] == muestras$XI[b,j]) {
+        A[i,j] <- A[i,j] + 1/B
+      } 
+    }
+  }
+}
+A <- A + t(A)
+diag(A) <- 1
+# se organizan las observaciones de acuerdo a la partición verdadera
+indices <- order(xi)
+A  <- A[indices,indices]
+# visualización de la matriz de incidencia
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+corrplot::corrplot(corr = A, is.corr = FALSE, addgrid.col = NA, method = "color", tl.pos = "n")
+```
+
+
+```{r, echo=F, eval=F}
+# RI & ARI
+ari <- NULL
+for (b in B_grid) 
+  ari[which(b == B_grid)] <- aricode::ARI(muestras$XI[b,], as.numeric(xi))
+mean(ari)
+quantile(ari, c(0.025,0.975))
+```
+
+
+## Ejemplo: Datos de Galaxias
+
+El conjunto de datos de galaxias fue publicado originalmente por Postman et al. (1986) y consiste de $n=82$ mediciones univariadas que representan las **velocidades de las galaxias alejándose de nuestra galaxia**.
+
+Los datos se encuentran disponibles en el paquete [https://rdrr.io/cran/rebmix/man/galaxy.html](rebmix) de `R`.
+
+***Postman M, Huchra JP, Geller MJ (1986) Probes of large-scale structure in the Corona Borealis region. The Astron J 92(6):1238–1247.***
+
+***Richardson, S., & Green, P. J. (1997). On Bayesian analysis of mixtures with an unknown number of components (with discussion). Journal of the Royal Statistical Society: series B (statistical methodology), 59(4), 731-792.***
+
+***Grün, B., Malsiner-Walli, G., & Frühwirth-Schnatter, S. (2021). How many data clusters are in the Galaxy data set?. Advances in Data Analysis and Classification, 1-25.***
+
+La siguiente Figura presenta un histograma de los datos.
+
+
+```{r, echo = F}
+# datos
+data(galaxy, package = "rebmix")
+y <- galaxy$Velocity
+n <- length(y)
+```
+
+
+```{r, echo=F, fig.align='center'}
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+# histograma
+hist(x = y, freq = F, nclass = 25, cex.axis = 0.8, col = "gray90", border = "gray90", main = "", xlab = "Velocidad", ylab = "Densidad")
+```
+
+### Ajuste del modelo {-}
+
+Nuevamente, se ajusta el modelo de **mezcla de Normales univariada con parámetros de ubicación y escala específicos** por medio del muestreador de Gibbs descrito en la Sección 2.2 con 5000 iteraciones espaciadas cada 5 iteraciones después de un periodo de calentamiento de calentamiento de 2500 iteraciones, utilizando la configuración previa definida por $\mu_0 = 0$, $\gamma^2_0 = 1$, $\nu_0 = 1$, $\sigma^2_0 = 1$, $\alv_0 = \frac{1}{H}\,\boldsymbol{1}_H$, con $H=5$. La siguiente Figura muestra la cadena de la log-verosimilitud correspondiente. Se evidencia que no hay señales de falta de convergencia.
+
+
+```{r, echo=FALSE}
+# cargar muestras de la distribución posterior
+# ver "finite mixture models - ejemplo 2.R"
+load(file = "finite mixture models muestras ejemplo 2.RData")
+```
+
+
+```{r, echo=F, fig.align='center', fig.width=8, fig.height=4}
+# visualización cadena log-verosimilitud
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+plot(x = 1:length(muestras$LP), y = muestras$LP, type = "p", pch = ".", cex = 1.5, cex.axis = 0.8, main = "", xlab = "Iteración", ylab = "Log-verosimilitud")
+```
+
+
+### Inferencia sobre el número de grupos
+
+Algunos grupos pueden estar vacíos a lo largo de las iteraciones del muestreador de Gibbs, dado que se ajusta el modelo con un valor de $H$ mayor que el número de grupos esperado (visualmente). La siguiente Figura presenta la proporción de grupos no vacíos a lo largo de las iteraciones. Se observa que particiones de con $H=3$ grupos es el escenario más probable a posteriori. 
+
+```{r, fig.align='center'}
+# número de grupos 
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+nc <- apply(X = muestras$XI, MARGIN = 1, FUN = function(x) length(table(x)))
+plot(table(nc)/length(nc), xlab = "Número de grupos", ylab = "Densidad")
+```
+
+
+### Inferencia sobre la función de densidad de la población {-}
+
+Siguiendo el protocolo del ejemplo anterior, la siguiente Figura presenta la estimación de la función de densidad de la población utilizando todas aquellas muestras asociadas con una partición con tres grupos no vacíos. Se observa una gran moda en el centro de la distribución. Las otras dos modas en los extremos de la distribución son mucho menos relevantes.
+
+```{r, echo=F}
+# inferencia sobre la función de densidad de la población
+M  <- 250
+x0 <- seq(from = 10, to = 35, len = M)
+B <- nrow(muestras$XI)
+FE <- matrix(data = NA, nrow = B, ncol = M)
+for (i in 1:M) {
+  for (b in 1:B)
+    FE[b,i] <- sum(muestras$OMEGA[b,]*dnorm(x = x0[i], mean = muestras$THETA[b,], sd = sqrt(muestras$SIG2[b,])))
+}
+FE <- FE[nc == 3,]
+f_hat <- colMeans(FE)
+f_inf <- apply(X = FE, MARGIN = 2, FUN = quantile, probs = 0.025)
+f_sup <- apply(X = FE, MARGIN = 2, FUN = quantile, probs = 0.975)
+```
+
+
+
+```{r, echo=F, fig.align='center'}
+par(mar = c(2.75,2.75,0.5,0.5), mgp = c(1.7,0.7,0))
+# visualización muestras
+plot(NA, NA, xlim = c(10, 35), ylim = c(0, 0.20), cex.axis = 0.8, xlab = "Velocidad", ylab = "", main = "")
+# muestras
+for (b in 1:nrow(FE))
+  lines(x = x0, y = FE[b,], type = "l", col = adjustcolor("red",0.02))
+# estimación modelo
+lines(x = x0, y = f_hat, type = "l", col = "blue", lwd = 2)
+```
+
+# Referencias {-}
+
+
+```{r, eval = TRUE, echo=FALSE, out.width="25%", fig.pos = 'H', fig.align = 'center'}
+knitr::include_graphics("Gelmancoverbook.png")
+```
